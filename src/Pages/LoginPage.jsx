@@ -110,7 +110,7 @@ function LoginPage() {
                 },
               }}
             >
-              🚀 Login
+              🚀 Logins
             </Button>
           </Box>
         </Paper>
