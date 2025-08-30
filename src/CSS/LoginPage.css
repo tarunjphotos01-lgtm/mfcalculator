@@ -1,0 +1,33 @@
+/* Full-page background */
+.login-bg {
+    height: 100vh; /* Full screen height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #6a11cb, #2575fc); /* Nice gradient */
+  }
+  
+  /* Center container */
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Login box styling */
+  .login-paper {
+    padding: 2rem;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 400px;
+    background-color: white;
+  }
+  
+  /* Error text */
+  .login-error {
+    color: red;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
