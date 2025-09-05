@@ -19,34 +19,19 @@ function PopulationFetcher() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!selectedCountry) {
-      setYears([]);
-      setSelectedYear("");
-      return;
-    }
     const countryData = countries.find((c) => c.country === selectedCountry);
-    if (countryData?.populationCounts) {
-      setYears(countryData.populationCounts.map((item) => item.year));
-    } else {
-      setYears([]);
-    }
+    setYears(countryData?.populationCounts.map((item) => item.year) || []);
+    setSelectedYear("");
   }, [selectedCountry, countries]);
 
   const handleSearch = () => {
-    try {
-      if (!selectedCountry || !selectedYear) {
-        setPopulation(null);
-        return;
-      }
-      const countryData = countries.find((c) => c.country === selectedCountry);
-      const entry = countryData?.populationCounts.find(
-        (item) => item.year === selectedYear
-      );
-      setPopulation(entry ? entry.value : "N/A");
-    } catch (error) {
-      console.error("Error fetching population data:", error);
-      setPopulation("Error fetching data");
+    if (!selectedCountry || !selectedYear) {
+      setPopulation(null);
+      return;
     }
+    const countryData = countries.find((c) => c.country === selectedCountry);
+    const entry = countryData?.populationCounts.find((item) => item.year === selectedYear);
+    setPopulation(entry ? entry.value : "N/A");
   };
 
   return (
@@ -71,12 +56,7 @@ function PopulationFetcher() {
           }}
         >
           <CardContent>
-            <Typography
-              variant="h5"
-              gutterBottom
-              align="center"
-              sx={{ fontWeight: "bold" }}
-            >
+            <Typography variant="h5" gutterBottom align="center" sx={{ fontWeight: "bold" }}>
               🌍 Country Population Viewer
             </Typography>
 
