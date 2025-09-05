@@ -1,41 +1,22 @@
 import React, { useState, useEffect } from "react";
-import {
-  Container,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Alert
-} from "@mui/material";
+import { Container, Card, CardContent, Typography, Box, Alert } from "@mui/material";
 import PopulationForm from "./PopulationForm";
-import axios from "axios";
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCountries, selectCountries, selectLoading, selectError } from '../Redux/populationSlice';
 
 function PopulationFetcher() {
-  const [countries, setCountries] = useState([]);
+  const dispatch = useDispatch();
+  const countries = useSelector(selectCountries);
+  const loading = useSelector(selectLoading);
+  const error = useSelector(selectError);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [years, setYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
   const [population, setPopulation] = useState(null);
-  const [error, setError] = useState("");
-  
+
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await axios.get(
-          "https://countriesnow.space/api/v0.1/countries/population"
-        );
-        const data = res.data;
-        if (!data.error && data.data) {
-          setCountries(data.data);
-        } else {
-          setError("Failed to fetch countries");
-        }
-      } catch (err) {
-        setError("Network error fetching countries");
-      }
-    };
-    fetchCountries();
-  }, []);
+    dispatch(fetchCountries());
+  }, [dispatch]);
 
   useEffect(() => {
     if (!selectedCountry) {
@@ -52,15 +33,20 @@ function PopulationFetcher() {
   }, [selectedCountry, countries]);
 
   const handleSearch = () => {
-    if (!selectedCountry || !selectedYear) {
-      setPopulation(null);
-      return;
+    try {
+      if (!selectedCountry || !selectedYear) {
+        setPopulation(null);
+        return;
+      }
+      const countryData = countries.find((c) => c.country === selectedCountry);
+      const entry = countryData?.populationCounts.find(
+        (item) => item.year === selectedYear
+      );
+      setPopulation(entry ? entry.value : "N/A");
+    } catch (error) {
+      console.error("Error fetching population data:", error);
+      setPopulation("Error fetching data");
     }
-    const countryData = countries.find((c) => c.country === selectedCountry);
-    const entry = countryData?.populationCounts.find(
-      (item) => item.year === selectedYear
-    );
-    setPopulation(entry ? entry.value : "N/A");
   };
 
   return (
@@ -94,6 +80,7 @@ function PopulationFetcher() {
               🌍 Country Population Viewer
             </Typography>
 
+            {loading && <Alert severity="info">Loading countries...</Alert>}
             {error && <Alert severity="error">{error}</Alert>}
 
             <PopulationForm

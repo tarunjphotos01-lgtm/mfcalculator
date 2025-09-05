@@ -1,19 +1,33 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useMemo, useState } from "react";
+import { ThemeProvider as MuiThemeProvider, createTheme } from "@mui/material/styles";
 
-// Create the context
-export const ThemeContext = createContext();
+// Named export for toggling
+export const ColorModeContext = createContext({ toggleColorMode: () => {} });
 
-// Create provider component
-export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState("light");
+// Default export provider
+export default function ThemeContextProvider({ children }) {
+  const [mode, setMode] = useState("light");
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
-  };
+  const colorMode = useMemo(
+    () => ({
+      toggleColorMode: () => setMode((prev) => (prev === "light" ? "dark" : "light")),
+    }),
+    []
+  );
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+        },
+      }),
+    [mode]
+  );
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+    <ColorModeContext.Provider value={colorMode}>
+      <MuiThemeProvider theme={theme}>{children}</MuiThemeProvider>
+    </ColorModeContext.Provider>
   );
-};
+}
