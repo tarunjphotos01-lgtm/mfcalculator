@@ -25,10 +25,21 @@ function PopulationFetcher() {
   }, [selectedCountry, countries]);
 
   const handleSearch = () => {
-    if (!selectedCountry || !selectedYear) {
-      setPopulation(null);
-      return;
+    try {
+      if (!selectedCountry || !selectedYear) {
+        setPopulation(null);
+        return;
+      }
+      const countryData = countries.find((c) => c.country === selectedCountry);
+      const entry = countryData?.populationCounts.find(
+        (item) => item.year === selectedYear
+      );
+      setPopulation(entry ? entry.value : "N/A");
+    } catch (error) {
+      console.error("Error fetching population data:", error);
+      setPopulation("Error fetching data");
     }
+
     const countryData = countries.find((c) => c.country === selectedCountry);
     const entry = countryData?.populationCounts.find((item) => item.year === selectedYear);
     setPopulation(entry ? entry.value : "N/A");
