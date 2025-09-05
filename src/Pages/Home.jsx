@@ -1,34 +1,35 @@
-import React, { useState } from "react";
+
+import React, { useState, useContext } from "react";
 import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
   Drawer,
+  Box,
+  Button,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  IconButton,
-  Container,
-  Toolbar,
-  AppBar,
-  Typography,
   Divider,
-  Box,
-  Button
+  Container,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import LogoutIcon from "@mui/icons-material/Logout";
-
 import PopulationFetcher from "./PopulationFetcher";
-import ThemePage from "./ThemePage"; // <-- Theme Context UI Page
+import ThemePage from "./ThemePage";
+import { ColorModeContext } from "./ThemeContext";
 
 function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [activePage, setActivePage] = useState(null); // null, "population", "theme"
+  const [activePage, setActivePage] = useState(null);
 
-  const toggleDrawer = (open) => () => {
-    setDrawerOpen(open);
-  };
+  const colorMode = useContext(ColorModeContext); // 🌙 Dark/Light toggle
+
+  const toggleDrawer = (open) => () => setDrawerOpen(open);
 
   const handleMenuClick = (page) => {
     setActivePage(page);
@@ -36,84 +37,55 @@ function Home() {
   };
 
   const handleLogout = () => {
-    // Clear session data
     localStorage.clear();
     sessionStorage.clear();
-
-    // Navigate to login or landing page
-    window.location.href = "/"; // Change path if needed
+    window.location.href = "/";
   };
 
   return (
     <>
-      {/* Top AppBar */}
+      {/* AppBar */}
       <AppBar position="sticky" sx={{ top: 0, zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
-          {/* Menu Button */}
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={toggleDrawer(true)}
-            sx={{ mr: 2 }}
-          >
+          <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)} sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
 
-          {/* Title */}
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Menu
           </Typography>
 
+          {/* Dark/Light Mode Button */}
+          <IconButton color="inherit" onClick={colorMode.toggleColorMode} sx={{ mr: 1 }}>
+            <Brightness4Icon />
+          </IconButton>
+
           {/* Logout Button */}
-          <Button
-            color="inherit"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-          >
+          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
             Logout
           </Button>
         </Toolbar>
       </AppBar>
 
-      {/* Left Drawer */}
+      {/* Drawer */}
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
         <Box sx={{ width: 250, bgcolor: "#f9f9f9", height: "100%" }}>
-          {/* Drawer Header */}
           <Box sx={{ p: 2, bgcolor: "#1976d2", color: "white" }}>
             <Typography variant="h6" fontWeight="bold">
               📊 Data Menu
             </Typography>
           </Box>
-
           <Divider />
           <List>
-            {/* Population Viewer Menu Item */}
-            <ListItem
-              button
-              onClick={() => handleMenuClick("population")}
-              sx={{
-                "&:hover": { bgcolor: "#e3f2fd" },
-              }}
-            >
-              <ListItemIcon>
-                <PublicIcon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Population Viewer" />
-            </ListItem>
-
-            {/* Theme Switcher Menu Item */}
-            <ListItem
-              button
-              onClick={() => handleMenuClick("theme")}
-              sx={{
-                "&:hover": { bgcolor: "#e3f2fd" },
-              }}
-            >
-              <ListItemIcon>
-                <Brightness4Icon color="primary" />
-              </ListItemIcon>
-              <ListItemText primary="Theme Switcher" />
-            </ListItem>
+            {[
+              { text: "Population Viewer", icon: <PublicIcon color="primary" />, page: "population" },
+              { text: "Theme Switcher", icon: <Brightness4Icon color="primary" />, page: "theme" },
+            ].map(({ text, icon, page }) => (
+              <ListItem button key={page} onClick={() => handleMenuClick(page)} sx={{ "&:hover": { bgcolor: "#e3f2fd" } }}>
+                <ListItemIcon>{icon}</ListItemIcon>
+                <ListItemText primary={text} />
+              </ListItem>
+            ))}
           </List>
         </Box>
       </Drawer>
@@ -128,3 +100,7 @@ function Home() {
 }
 
 export default Home;
+
+
+
+

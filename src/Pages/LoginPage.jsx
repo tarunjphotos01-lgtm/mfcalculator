@@ -38,7 +38,7 @@ function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #4f46e5, #9333ea)", // gradient background
+        background: "linear-gradient(135deg, #4f46e5, #9333ea)",
         padding: 2,
       }}
     >
@@ -62,7 +62,6 @@ function LoginPage() {
             Login
           </Typography>
 
-          {/* Show popup/error */}
           {error && (
             <Alert severity="error" sx={{ mb: 2, borderRadius: "8px" }}>
               {error}
@@ -110,7 +109,7 @@ function LoginPage() {
                 },
               }}
             >
-              🚀 Logins
+              🚀 Login
             </Button>
           </Box>
         </Paper>
