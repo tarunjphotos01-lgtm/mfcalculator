@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from "react";
 import {
   AppBar,
@@ -9,25 +8,29 @@ import {
   Box,
   Button,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Divider,
   Container,
 } from "@mui/material";
+
 import MenuIcon from "@mui/icons-material/Menu";
 import PublicIcon from "@mui/icons-material/Public";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import LogoutIcon from "@mui/icons-material/Logout";
+import CalculateIcon from "@mui/icons-material/Calculate";
+
 import PopulationFetcher from "./PopulationFetcher";
 import ThemePage from "./ThemePage";
+import  MFProfitLossCalculator  from "./MFProfitLossCalculator";
 import { ColorModeContext } from "./ThemeContext";
 
 function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activePage, setActivePage] = useState(null);
 
-  const colorMode = useContext(ColorModeContext); // 🌙 Dark/Light toggle
+  const colorMode = useContext(ColorModeContext);
 
   const toggleDrawer = (open) => () => setDrawerOpen(open);
 
@@ -45,22 +48,20 @@ function Home() {
   return (
     <>
       {/* AppBar */}
-      <AppBar position="sticky" sx={{ top: 0, zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+      <AppBar position="sticky">
         <Toolbar>
-          <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)} sx={{ mr: 2 }}>
+          <IconButton edge="start" color="inherit" onClick={toggleDrawer(true)}>
             <MenuIcon />
           </IconButton>
 
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Menu
+            Dashboard
           </Typography>
 
-          {/* Dark/Light Mode Button */}
-          <IconButton color="inherit" onClick={colorMode.toggleColorMode} sx={{ mr: 1 }}>
+          <IconButton color="inherit" onClick={colorMode.toggleColorMode}>
             <Brightness4Icon />
           </IconButton>
 
-          {/* Logout Button */}
           <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
             Logout
           </Button>
@@ -69,23 +70,34 @@ function Home() {
 
       {/* Drawer */}
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-        <Box sx={{ width: 250, bgcolor: "#f9f9f9", height: "100%" }}>
-          <Box sx={{ p: 2, bgcolor: "#1976d2", color: "white" }}>
-            <Typography variant="h6" fontWeight="bold">
-              📊 Data Menu
-            </Typography>
+        <Box sx={{ width: 260 }}>
+          <Box sx={{ p: 2, bgcolor: "primary.main", color: "white" }}>
+            <Typography variant="h6">📊 Data Menu</Typography>
           </Box>
+
           <Divider />
+
           <List>
-            {[
-              { text: "Population Viewer", icon: <PublicIcon color="primary" />, page: "population" },
-              { text: "Theme Switcher", icon: <Brightness4Icon color="primary" />, page: "theme" },
-            ].map(({ text, icon, page }) => (
-              <ListItem button key={page} onClick={() => handleMenuClick(page)} sx={{ "&:hover": { bgcolor: "#e3f2fd" } }}>
-                <ListItemIcon>{icon}</ListItemIcon>
-                <ListItemText primary={text} />
-              </ListItem>
-            ))}
+            <ListItemButton onClick={() => handleMenuClick("population")}>
+              <ListItemIcon>
+                <PublicIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText primary="Population Viewer" />
+            </ListItemButton>
+
+            <ListItemButton onClick={() => handleMenuClick("MFCalculator")}>
+              <ListItemIcon>
+                <CalculateIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText primary="MF Profit / Loss Calculator" />
+            </ListItemButton>
+
+            <ListItemButton onClick={() => handleMenuClick("theme")}>
+              <ListItemIcon>
+                <Brightness4Icon color="primary" />
+              </ListItemIcon>
+              <ListItemText primary="Theme Switcher" />
+            </ListItemButton>
           </List>
         </Box>
       </Drawer>
@@ -93,6 +105,7 @@ function Home() {
       {/* Page Content */}
       <Container sx={{ mt: 4 }}>
         {activePage === "population" && <PopulationFetcher />}
+        {activePage === "MFCalculator" && <MFProfitLossCalculator />}
         {activePage === "theme" && <ThemePage />}
       </Container>
     </>
@@ -100,7 +113,3 @@ function Home() {
 }
 
 export default Home;
-
-
-
-
