@@ -6,7 +6,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<MFProfitLossCalculator/>} />
+        <Route path="/mfcalculator" element={<MFProfitLossCalculator/>} />
       </Routes>
     </Router>
   );
