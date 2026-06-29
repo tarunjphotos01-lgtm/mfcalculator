@@ -225,7 +225,7 @@ export default function MFProfitLossCalculator() {
             fullWidth
             sx={{ mb: 3 }}
           >
-            {[...Array(2)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <MenuItem key={i + 1} value={i + 1}>
                 MF Set {i + 1}
               </MenuItem>
