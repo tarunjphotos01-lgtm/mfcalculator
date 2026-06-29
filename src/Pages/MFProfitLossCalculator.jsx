@@ -566,8 +566,9 @@ export default function MFProfitLossCalculator() {
         <Box
   position="fixed"
   bottom={0}
-  left='9px'
-  width="99%"
+  left={0}
+  width="100%"
+  maxwidth="850px"
   textAlign="center"
   sx={{
     backgroundColor: "black",
