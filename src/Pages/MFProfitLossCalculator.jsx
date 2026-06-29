@@ -262,7 +262,8 @@ export default function MFProfitLossCalculator() {
         <Tooltip
           arrow
           title="Enter the NAV (Net Asset Value) at which you purchased the mutual fund units. You can find it in your mutual fund statement or transaction history."
-        
+        enterTouchDelay={0}
+  leaveTouchDelay={3000}
           slotProps={{
     tooltip: {
       sx: {
@@ -281,7 +282,7 @@ export default function MFProfitLossCalculator() {
   }}
         >
           <InfoOutlinedIcon
-            fontSize="small"
+            fontSize="medium"
             sx={{
               color: "#1976d2",
               cursor: "pointer"
@@ -315,6 +316,8 @@ export default function MFProfitLossCalculator() {
         <Tooltip
           arrow
           title="Enter the total number of mutual fund units alloted. You can find this in your mutual fund statement."
+           enterTouchDelay={0}
+           leaveTouchDelay={3000}
           slotProps={{
     tooltip: {
       sx: {
@@ -333,7 +336,7 @@ export default function MFProfitLossCalculator() {
   }}
         >
           <InfoOutlinedIcon
-            fontSize="small"
+            fontSize="medium"
             sx={{
               color: "#1976d2",
               cursor: "pointer"
@@ -401,6 +404,8 @@ export default function MFProfitLossCalculator() {
         <Tooltip
   arrow
   title="Enter the latest NAV (Net Asset Value) of your mutual fund to calculate current investment value."
+   enterTouchDelay={0}
+  leaveTouchDelay={3000}
   slotProps={{
     tooltip: {
       sx: {
@@ -419,7 +424,7 @@ export default function MFProfitLossCalculator() {
   }}
 >
           <InfoOutlinedIcon
-            fontSize="small"
+            fontSize="medium"
             sx={{
               color: "#1976d2",
               cursor: "pointer"
