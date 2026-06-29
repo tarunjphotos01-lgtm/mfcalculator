@@ -204,7 +204,13 @@ export default function MFProfitLossCalculator() {
         alignItems="center"
         sx={{ background: "linear-gradient(135deg,#063970,#16b7c8)", p: 2 }}
       >
-        <Paper sx={{ p: 4, width: 850, borderRadius: 4 }}>
+        <Paper sx={{
+    p: { xs: 2, sm: 4 },
+    width: "100%",
+    maxWidth: 850,
+    borderRadius: 4,
+    boxSizing: "border-box"
+  }}>
           <Typography variant="h5" align="center" fontWeight="bold">
             Mutual Fund Profit & Loss Calculator
           </Typography>
@@ -234,7 +240,7 @@ export default function MFProfitLossCalculator() {
               key={index}
               sx={{ mb: 2 }}
             >
-              <Grid item xs={3}>
+              <Grid item xs={12} sm={4}>
                 <TextField
   label={`Purchased NAV (${index + 1})`}
   type="number"
@@ -288,7 +294,7 @@ export default function MFProfitLossCalculator() {
 />
               </Grid>
 
-              <Grid item xs={3}>
+              <Grid item xs={12} sm={4}>
                <TextField
   label="Alloted Units"
   type="number"
@@ -370,7 +376,7 @@ export default function MFProfitLossCalculator() {
           ))}
 
           <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
              <TextField
   label="Current NAV"
   type="number"
@@ -425,7 +431,7 @@ export default function MFProfitLossCalculator() {
   }}
 />
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <DatePicker
                 label="Current Date"
                 value={currentDate}
@@ -437,8 +443,14 @@ export default function MFProfitLossCalculator() {
             </Grid>
           </Grid>
 
-          <Box textAlign="center" mt={3}>
-            <Button variant="contained" onClick={handleCalculate} sx={{ mx: 1 }}>
+          <Box
+  mt={3}
+  display="flex"
+  flexDirection={{ xs: "column", sm: "row" }}
+  justifyContent="center"
+  gap={2}
+>
+            <Button variant="contained" onClick={handleCalculate}>
               Calculate
             </Button>
             <Button
