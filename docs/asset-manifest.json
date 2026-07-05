@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.js": "/mfcalculator/static/js/main.df02feb9.js",
+    "main.js": "/mfcalculator/static/js/main.211c1b98.js",
     "static/js/453.c95ef804.chunk.js": "/mfcalculator/static/js/453.c95ef804.chunk.js",
     "index.html": "/mfcalculator/index.html",
-    "main.df02feb9.js.map": "/mfcalculator/static/js/main.df02feb9.js.map",
+    "main.211c1b98.js.map": "/mfcalculator/static/js/main.211c1b98.js.map",
     "453.c95ef804.chunk.js.map": "/mfcalculator/static/js/453.c95ef804.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.df02feb9.js"
+    "static/js/main.211c1b98.js"
   ]
 }

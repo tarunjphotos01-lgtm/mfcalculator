@@ -7,8 +7,9 @@ import {
   Divider,
   Grid,
   Button,
-  MenuItem,
   IconButton,
+  MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -21,16 +22,14 @@ import InputAdornment from "@mui/material/InputAdornment";
 
 /**
  * Reusable Tooltip Component
- * Keeps the main JSX clean by abstracting the complex tooltip styling.
- * Used to show helpful information icons inside input fields.
  */
 const InfoTooltip = ({ title }) => (
   <InputAdornment position="end">
     <Tooltip
       arrow
       title={title}
-      enterTouchDelay={0} // Shows instantly on touch devices
-      leaveTouchDelay={3000} // Stays visible for a moment after touch
+      enterTouchDelay={0}
+      leaveTouchDelay={3000}
       slotProps={{
         tooltip: {
           sx: { bgcolor: "#000", color: "#fff", fontSize: "13px", p: 1, borderRadius: "8px" },
@@ -43,103 +42,122 @@ const InfoTooltip = ({ title }) => (
   </InputAdornment>
 );
 
+// Pre-defined list of your 12 Schema Codes
+const SCHEMA_CODES = [
+  "120821", "120833", "120828", "120546", "120847", "120823",
+  "125307", "119732", "150518", "125354", "148457", "142641"
+];
+
 export default function MFProfitLossCalculator() {
   // ==========================================
   // STATE MANAGEMENT
   // ==========================================
   
-  // Tracks how many sets of mutual fund inputs are currently active (Dropdown value)
-  const [mfSetCount, setMfSetCount] = useState(1);
-  
-  // Array of objects holding the data for each mutual fund purchase row
+  const [schemaCode, setSchemaCode] = useState("");
+  const [schemaName, setSchemaName] = useState("");
+  const [fundList, setFundList] = useState([]);
+  const [isLoadingFunds, setIsLoadingFunds] = useState(true);
+
   const [purchaseDetails, setPurchaseDetails] = useState([
     { purchaseNav: "", units: "", purchaseDate: null },
   ]);
   
-  // Stores the latest NAV value to calculate current worth
   const [currentNav, setCurrentNav] = useState("");
-  
-  // Static state for today's date, used to calculate holding periods and taxes
   const [currentDate] = useState(new Date());
-  
-  // Stores the results for the standard Calculate button
   const [results, setResults] = useState(null);
-  
-  // Stores the results for the Calculate with Tax button
   const [withTaxResults, setWithTaxResults] = useState(null);
-  
-  // Array of string keys representing which fields currently have validation errors
   const [errors, setErrors] = useState([]);
 
-  // Reference to the very first NAV input field so we can auto-focus it
   const navInputRef = useRef(null);
 
   // ==========================================
   // LIFECYCLE HOOKS
   // ==========================================
   
-  // Runs once when the component first loads to focus the user's cursor on the first input
   useEffect(() => {
     if (navInputRef.current) navInputRef.current.focus();
+  }, []);
+
+  // Fetch all 12 funds on mount
+  useEffect(() => {
+    const fetchAllFunds = async () => {
+      setIsLoadingFunds(true);
+      try {
+        const promises = SCHEMA_CODES.map((code) =>
+          fetch(`https://api.mfapi.in/mf/${code}/latest`).then((res) => res.json())
+        );
+        
+        const results = await Promise.all(promises);
+        
+        const formattedFunds = results.map((data) => {
+          if (data && data.meta && data.data && data.data.length > 0) {
+            return {
+              code: data.meta.scheme_code,
+              name: data.meta.scheme_name,
+              nav: data.data[0].nav,
+            };
+          }
+          return null;
+        }).filter(Boolean);
+
+        setFundList(formattedFunds);
+      } catch (error) {
+        console.error("Error fetching mutual funds list:", error);
+        alert("Failed to load mutual fund names. Please refresh the page.");
+      } finally {
+        setIsLoadingFunds(false);
+      }
+    };
+
+    fetchAllFunds();
   }, []);
 
   // ==========================================
   // EVENT HANDLERS
   // ==========================================
 
-  /**
-   * Updates a specific field (NAV, Units, or Date) in a specific row.
-   * @param {number} index - The row number being edited.
-   * @param {string} field - The name of the property being changed.
-   * @param {any} value - The new value typed/selected by the user.
-   */
+  // MODIFIED: Added reset functionality inside fund selection
+  const handleFundSelection = (e) => {
+    const selectedCode = e.target.value;
+    setSchemaCode(selectedCode);
+    
+    const selectedFund = fundList.find((fund) => String(fund.code) === String(selectedCode));
+    
+    if (selectedFund) {
+      setSchemaName(selectedFund.name);
+      setCurrentNav(selectedFund.nav); 
+      
+      // NEW: Clear/Reset everything below apart from NAV and Today's Date
+      setPurchaseDetails([{ purchaseNav: "", units: "", purchaseDate: null }]); 
+      setResults(null); 
+      setWithTaxResults(null); 
+      setErrors([]); 
+    }
+  };
+
   const handlePurchaseChange = (index, field, value) => {
     const updated = [...purchaseDetails];
     updated[index][field] = value;
     setPurchaseDetails(updated);
   };
 
-  /**
-   * Handles changing the total number of MF Sets from the dropdown menu.
-   * Adds empty rows if the number increases, or removes rows if it decreases.
-   */
-  const handleMfSetChange = (e) => {
-    const count = parseInt(e.target.value, 10);
-    setMfSetCount(count);
-
-    setPurchaseDetails((prev) => {
-      const updated = [...prev];
-      // If the user selected a higher number, push new empty objects
-      while (updated.length < count) {
-        updated.push({ purchaseNav: "", units: "", purchaseDate: null });
-      }
-      // Return exactly the amount requested (slices off extras if they selected a lower number)
-      return updated.slice(0, count);
-    });
+  const handleAddInvestment = () => {
+    setPurchaseDetails((prev) => [
+      ...prev,
+      { purchaseNav: "", units: "", purchaseDate: null },
+    ]);
   };
 
-  /**
-   * Removes a specific mutual fund input row when the user clicks the delete (X) icon.
-   * @param {number} index - The index of the row to remove.
-   */
   const handleRemoveMfSet = (index) => {
-    if (purchaseDetails.length === 1) return; // Prevent deleting the very last row
-    
-    // Filter out the row that matches the clicked index
+    if (purchaseDetails.length === 1) return;
     const updated = purchaseDetails.filter((_, i) => i !== index);
     setPurchaseDetails(updated);
-    setMfSetCount(updated.length); // Keep the dropdown sync'd with the row count
   };
 
   // ==========================================
   // CALCULATION & VALIDATION LOGIC
   // ==========================================
 
-  /**
-   * Checks all fields to ensure they are not empty before calculating.
-   * Updates the `errors` state array with specific IDs so the UI turns red.
-   * @returns {boolean} True if all inputs are valid, False otherwise.
-   */
   const validateInputs = () => {
     const validationErrors = [];
     purchaseDetails.forEach((d, index) => {
@@ -153,16 +171,10 @@ export default function MFProfitLossCalculator() {
     return validationErrors.length === 0;
   };
 
-  /**
-   * Shared helper function that calculates the base financial metrics
-   * (Total Investment, Current Value, Gain/Loss, Holding Period).
-   * Used by both standard and tax calculations.
-   */
   const calculateCoreMetrics = () => {
     let totalInvestment = 0;
     let totalUnits = 0;
 
-    // Sum up the total money invested and the total units accumulated
     purchaseDetails.forEach((d) => {
       if (d.purchaseNav && d.units) {
         totalInvestment += Number(d.purchaseNav) * Number(d.units);
@@ -170,7 +182,6 @@ export default function MFProfitLossCalculator() {
       }
     });
 
-    // Guard clause: stop if inputs are zero/invalid
     if (totalUnits === 0 || totalInvestment === 0 || !purchaseDetails[0].purchaseDate) {
       return null;
     }
@@ -178,12 +189,10 @@ export default function MFProfitLossCalculator() {
     const currentValue = Number(currentNav) * totalUnits;
     const gainLoss = currentValue - totalInvestment;
 
-    // Find the oldest purchase date to calculate total holding period
     const oldestPurchase = purchaseDetails.reduce((oldest, current) =>
       current.purchaseDate < oldest.purchaseDate ? current : oldest
     );
 
-    // Calculate exact years, months, and days from the oldest purchase to today
     const { years = 0, months = 0, days = 0 } = intervalToDuration({
       start: oldestPurchase.purchaseDate,
       end: currentDate,
@@ -198,20 +207,14 @@ export default function MFProfitLossCalculator() {
     };
   };
 
-  /**
-   * Triggered by the "Calculate" button.
-   * Generates standard Profit/Loss results without tax implications.
-   */
   const handleCalculate = () => {
     if (!validateInputs()) return;
 
     const metrics = calculateCoreMetrics();
     if (!metrics) return;
 
-    // Calculate the percentage of gain or loss
     const gainLossPercent = ((metrics.gainLoss / metrics.totalInvestment) * 100).toFixed(2);
 
-    // Save to state to render the Standard Results block
     setResults({
       investment: metrics.totalInvestment.toFixed(2),
       currentValue: metrics.currentValue.toFixed(2),
@@ -220,34 +223,26 @@ export default function MFProfitLossCalculator() {
       holdingPeriod: metrics.holdingPeriod,
     });
     
-    // Clear out the tax results if they were previously calculated
     setWithTaxResults(null);
   };
 
-  /**
-   * Triggered by the "Calculate with Tax" button.
-   * Applies tax rules (e.g., Short Term vs Long Term Capital Gains) based on holding period.
-   */
   const handleCalculateWithTax = () => {
     if (!validateInputs()) return;
 
     const metrics = calculateCoreMetrics();
     if (!metrics) return;
 
-    // Determine tax rate based on holding months (e.g., < 12 months = STCG, > 12 = LTCG)
     const months = differenceInMonths(currentDate, metrics.oldestDate);
     const taxRate = months < 12 ? 20 : 12.5;
 
     let taxAmount = 0;
     let finalGain = metrics.gainLoss;
 
-    // Only apply taxes if there is actually a profit
     if (metrics.gainLoss > 0) {
       taxAmount = (metrics.gainLoss * taxRate) / 100;
       finalGain = metrics.gainLoss - taxAmount;
     }
 
-    // Save to state to render the Tax Results block
     setWithTaxResults({
       taxRate,
       investment: metrics.totalInvestment.toFixed(2),
@@ -257,21 +252,17 @@ export default function MFProfitLossCalculator() {
       holdingPeriod: metrics.holdingPeriod,
     });
     
-    // Clear out the standard results if they were previously calculated
     setResults(null);
   };
 
-  /**
-   * Resets the entire form back to its default, empty state.
-   */
   const handleReset = () => {
-    setMfSetCount(1);
+    setSchemaCode("");     
+    setSchemaName("");     
     setPurchaseDetails([{ purchaseNav: "", units: "", purchaseDate: null }]);
     setCurrentNav("");
     setResults(null);
     setWithTaxResults(null);
     setErrors([]);
-    // Put the user's cursor back on the first input
     if (navInputRef.current) navInputRef.current.focus();
   };
 
@@ -279,9 +270,7 @@ export default function MFProfitLossCalculator() {
   // RENDER (JSX)
   // ==========================================
   return (
-    // LocalizationProvider is required for MUI DatePickers to format dates properly
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      {/* Outer wrapper: Full height background with a gradient */}
       <Box
         minHeight="100vh"
         display="flex"
@@ -289,7 +278,6 @@ export default function MFProfitLossCalculator() {
         alignItems="center"
         sx={{ background: "linear-gradient(135deg,#063970,#16b7c8)", p: 2, pb: 6 }}
       >
-        {/* Main white card container */}
         <Paper
           sx={{
             p: { xs: 2, sm: 4 },
@@ -305,54 +293,59 @@ export default function MFProfitLossCalculator() {
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Dropdown to select how many MF rows to show */}
-          <TextField
-            select
-            label="Select MF Set"
-            value={mfSetCount}
-            onChange={handleMfSetChange}
-            fullWidth
-            sx={{ mb: 3 }}
-          >
-            {[...Array(5)].map((_, i) => (
-              <MenuItem key={i + 1} value={i + 1}>
-                MF Set {i + 1}
-              </MenuItem>
-            ))}
-          </TextField>
+          {/* Dropdown Menu displaying actual Fund Names */}
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              select
+              label="Select Mutual Fund"
+              value={schemaCode}
+              onChange={handleFundSelection}
+              fullWidth
+              disabled={isLoadingFunds}
+              InputProps={{
+                startAdornment: isLoadingFunds ? (
+                  <CircularProgress size={20} sx={{ mr: 2 }} />
+                ) : null,
+              }}
+              helperText={isLoadingFunds ? "Loading mutual funds..." : ""}
+            >
+              {fundList.map((fund) => (
+                <MenuItem key={fund.code} value={fund.code}>
+                  {fund.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
 
           {/* DYNAMIC MF INPUT ROWS */}
-          {/* Loops through the purchaseDetails array and renders a row for each object */}
           {purchaseDetails.map((detail, index) => (
             <Box
               key={index}
               sx={{
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" }, // Stack vertically on mobile, horizontally on tablet+
+                flexDirection: { xs: "column", sm: "row" }, 
                 alignItems: { xs: "stretch", sm: "center" },
                 gap: 2,
                 mb: 2,
                 width: "100%",
               }}
             >
-              {/* Field 1: Purchased NAV */}
               <TextField
                 sx={{ flex: 1 }}
                 label={`Purchased NAV (${index + 1})`}
                 type="number"
                 value={detail.purchaseNav}
-                error={errors.includes(`${index}-nav`)} // Turns red if this ID is in the error array
+                error={errors.includes(`${index}-nav`)}
                 helperText={errors.includes(`${index}-nav`) ? "NAV is required" : ""}
                 onChange={(e) => handlePurchaseChange(index, "purchaseNav", e.target.value)}
-                inputRef={index === 0 ? navInputRef : null} // Only attach the ref to the very first row
+                inputRef={index === 0 ? navInputRef : null}
                 InputProps={{
                   endAdornment: (
-                    <InfoTooltip title="Enter the NAV (Net Asset Value) at which you purchased the mutual fund units. You can find it in your mutual fund statement or transaction history." />
+                    <InfoTooltip title="Enter the NAV (Net Asset Value) at which you purchased the mutual fund units." />
                   ),
                 }}
               />
 
-              {/* Field 2: Alloted Units */}
               <TextField
                 sx={{ flex: 1 }}
                 label="Alloted Units"
@@ -363,12 +356,11 @@ export default function MFProfitLossCalculator() {
                 onChange={(e) => handlePurchaseChange(index, "units", e.target.value)}
                 InputProps={{
                   endAdornment: (
-                    <InfoTooltip title="Enter the total number of mutual fund units alloted. You can find this in your mutual fund statement." />
+                    <InfoTooltip title="Enter the total number of mutual fund units alloted." />
                   ),
                 }}
               />
 
-              {/* Field 3: Date Picker & Delete Button Grouped */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1 }}>
                 <DatePicker
                   sx={{ flexGrow: 1 }}
@@ -385,7 +377,7 @@ export default function MFProfitLossCalculator() {
                 <IconButton
                   color="error"
                   onClick={() => handleRemoveMfSet(index)}
-                  disabled={purchaseDetails.length === 1} // Can't delete if it's the only row left
+                  disabled={purchaseDetails.length === 1}
                   sx={{ flexShrink: 0 }}
                 >
                   <CloseIcon />
@@ -394,33 +386,34 @@ export default function MFProfitLossCalculator() {
             </Box>
           ))}
 
+          {/* Add Investment Button */}
+          <Button 
+            variant="outlined" 
+            onClick={handleAddInvestment} 
+            sx={{ mb: 3 }}
+          >
+            + Add Investment
+          </Button>
+
           {/* CURRENT VALUE BLOCK */}
-          {/* Inputs for Current NAV and Current Date */}
           <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Current NAV"
+                label="Current NAV (Fetched Automatically)"
                 type="number"
                 value={currentNav}
                 error={errors.includes("current-nav")}
-                helperText={errors.includes("current-nav") ? "Current NAV is required" : ""}
-                onChange={(e) => {
-                  setCurrentNav(e.target.value);
-                  // Instantly clear the error state for this field as soon as they start typing
-                  if (e.target.value) {
-                    setErrors((prev) => prev.filter((err) => err !== "current-nav"));
-                  }
-                }}
+                helperText={errors.includes("current-nav") ? "Select a scheme to get current NAV" : ""}
                 fullWidth
+                disabled
                 InputProps={{
                   endAdornment: (
-                    <InfoTooltip title="Enter the latest NAV (Net Asset Value) of your mutual fund to calculate current investment value." />
+                    <InfoTooltip title="The latest NAV automatically fetched from the mutual fund API." />
                   ),
                 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              {/* This date picker is disabled because it strictly shows "Today" */}
               <DatePicker
                 label="Current Date"
                 value={currentDate}
@@ -444,7 +437,6 @@ export default function MFProfitLossCalculator() {
           </Box>
 
           {/* STANDARD RESULTS UI */}
-          {/* Only renders if the 'results' state is populated */}
           {results && (
             <Box mt={4} p={3} textAlign="center" borderRadius="12px" border="1px solid #e0e0e0">
               <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1976d2" }}>
@@ -453,7 +445,6 @@ export default function MFProfitLossCalculator() {
               <Divider sx={{ my: 2 }} />
               <Typography><strong>Investment:</strong> ₹{results.investment}</Typography>
               <Typography><strong>Current Value:</strong> ₹{results.currentValue}</Typography>
-              {/* Color the text green if profit, red if loss */}
               <Typography sx={{ fontWeight: "bold", color: Number(results.gainLoss) >= 0 ? "green" : "red" }}>
                 {Number(results.gainLoss) >= 0 ? "Profit" : "Loss"}: ₹{results.gainLoss} ({results.gainLossPercent}%)
               </Typography>
@@ -464,7 +455,6 @@ export default function MFProfitLossCalculator() {
           )}
 
           {/* TAX RESULTS UI */}
-          {/* Only renders if the 'withTaxResults' state is populated */}
           {withTaxResults && (
             <Box mt={4} p={3} textAlign="center" borderRadius="12px" border="1px solid #e0e0e0">
               <Typography variant="h6" sx={{ fontWeight: "bold", color: "#d32f2f" }}>
@@ -475,7 +465,6 @@ export default function MFProfitLossCalculator() {
               <Typography><strong>Investment:</strong> ₹{withTaxResults.investment}</Typography>
               <Typography><strong>Current Value:</strong> ₹{withTaxResults.currentValue}</Typography>
               <Typography>Tax Amount: ₹{withTaxResults.taxAmount}</Typography>
-              {/* Color the text green if profit, red if loss */}
               <Typography sx={{ fontWeight: "bold", color: Number(withTaxResults.finalGain) >= 0 ? "green" : "red" }}>
                 Final {Number(withTaxResults.finalGain) >= 0 ? "Profit" : "Loss"}: ₹{withTaxResults.finalGain}
               </Typography>
