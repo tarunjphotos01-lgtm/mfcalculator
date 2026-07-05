@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.js": "/mfcalculator/static/js/main.cb2b93c3.js",
+    "static/js/453.c95ef804.chunk.js": "/mfcalculator/static/js/453.c95ef804.chunk.js",
+    "index.html": "/mfcalculator/index.html",
+    "main.cb2b93c3.js.map": "/mfcalculator/static/js/main.cb2b93c3.js.map",
+    "453.c95ef804.chunk.js.map": "/mfcalculator/static/js/453.c95ef804.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.cb2b93c3.js"
+  ]
+}
