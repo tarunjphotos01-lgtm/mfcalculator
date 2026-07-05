@@ -48,6 +48,22 @@ const SCHEMA_CODES = [
   "125307", "119732", "150518", "125354", "148457", "142641"
 ];
 
+/**
+ * NEW: Helper function to convert messy API strings into clean Title Case.
+ * It handles spaces, hyphens, and completely overrides chaotic uppercase strings.
+ */
+const formatSchemaName = (str) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .split(/([\s\-]+)/) // Split by spaces or hyphens but retain them to keep structural formatting
+    .map((word) => {
+      if (word.trim().length === 0 || word === "-") return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join("");
+};
+
 export default function MFProfitLossCalculator() {
   // ==========================================
   // STATE MANAGEMENT
@@ -93,7 +109,8 @@ export default function MFProfitLossCalculator() {
           if (data && data.meta && data.data && data.data.length > 0) {
             return {
               code: data.meta.scheme_code,
-              name: data.meta.scheme_name,
+              // MODIFIED: Formatting the raw API scheme name to look clean and uniform
+              name: formatSchemaName(data.meta.scheme_name),
               nav: data.data[0].nav,
             };
           }
@@ -116,7 +133,6 @@ export default function MFProfitLossCalculator() {
   // EVENT HANDLERS
   // ==========================================
 
-  // MODIFIED: Added reset functionality inside fund selection
   const handleFundSelection = (e) => {
     const selectedCode = e.target.value;
     setSchemaCode(selectedCode);
@@ -127,7 +143,6 @@ export default function MFProfitLossCalculator() {
       setSchemaName(selectedFund.name);
       setCurrentNav(selectedFund.nav); 
       
-      // NEW: Clear/Reset everything below apart from NAV and Today's Date
       setPurchaseDetails([{ purchaseNav: "", units: "", purchaseDate: null }]); 
       setResults(null); 
       setWithTaxResults(null); 
@@ -308,9 +323,26 @@ export default function MFProfitLossCalculator() {
                 ) : null,
               }}
               helperText={isLoadingFunds ? "Loading mutual funds..." : ""}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    sx: { maxWidth: "90vw" }
+                  }
+                }
+              }}
             >
               {fundList.map((fund) => (
-                <MenuItem key={fund.code} value={fund.code}>
+                <MenuItem 
+                  key={fund.code} 
+                  value={fund.code}
+                  sx={{ 
+                    whiteSpace: "normal", 
+                    wordBreak: "break-word",
+                    py: 1.5,
+                    fontSize: { xs: "14px", sm: "15px" },
+                    lineHeight: 1.3
+                  }}
+                >
                   {fund.name}
                 </MenuItem>
               ))}
