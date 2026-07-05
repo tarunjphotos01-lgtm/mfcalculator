@@ -90,6 +90,7 @@ export default function MFProfitLossCalculator() {
   // LIFECYCLE HOOKS
   // ==========================================
   
+  
   useEffect(() => {
     if (navInputRef.current) navInputRef.current.focus();
   }, []);
